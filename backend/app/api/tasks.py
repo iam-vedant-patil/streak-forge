@@ -186,4 +186,3 @@ def get_task_streak(
         "current_streak": current_streak,
         "longest_streak": longest_streak,
     }
-}
