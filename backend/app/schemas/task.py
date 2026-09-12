@@ -8,6 +8,12 @@ class TaskCreate(BaseModel):
     description: str | None = None
 
 
+class TaskUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    is_active: bool | None = None
+
+
 class TaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
