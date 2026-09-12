@@ -110,3 +110,72 @@ def test_get_task_streak_task_not_found():
     }
 
     teardown_database()
+def test_complete_task():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="Complete Me",
+        description="Test completion",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.post(f"/tasks/{task_id}/complete")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["task_id"] == task_id
+    assert data["completion_date"] == date.today().isoformat()
+
+    teardown_database()
+def test_complete_task_twice_same_day():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="Complete Twice",
+        description="Test duplicate completion",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    first_response = client.post(f"/tasks/{task_id}/complete")
+
+    assert first_response.status_code == 200
+
+    second_response = client.post(f"/tasks/{task_id}/complete")
+
+    assert second_response.status_code == 409
+    assert second_response.json() == {
+        "detail": "Task already completed today."
+    }
+
+    teardown_database()
+def test_complete_task_not_found():
+    setup_database()
+
+    response = client.post("/tasks/999/complete")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
