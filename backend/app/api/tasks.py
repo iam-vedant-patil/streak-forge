@@ -150,6 +150,7 @@ def get_task_completions(
         .all()
     )
 
+
 @router.get(
     "/{task_id}/streak",
     response_model=TaskStreakResponse,
@@ -181,7 +182,8 @@ def get_task_streak(
     longest_streak = calculate_longest_streak(completion_dates)
 
     return {
-    "task_id": task_id,
-    "current_streak": current_streak,
-    "longest_streak": longest_streak,
+        "task_id": task_id,
+        "current_streak": current_streak,
+        "longest_streak": longest_streak,
+    }
 }
