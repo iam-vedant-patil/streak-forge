@@ -97,3 +97,16 @@ def test_get_task_streak():
     }
 
     teardown_database()
+
+
+def test_get_task_streak_task_not_found():
+    setup_database()
+
+    response = client.get("/tasks/999/streak")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
