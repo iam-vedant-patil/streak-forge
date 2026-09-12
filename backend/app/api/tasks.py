@@ -14,7 +14,10 @@ from backend.app.schemas.task import (
     TaskStreakResponse,
     TaskUpdate,
 )
-from backend.app.services.streak import calculate_current_streak
+from backend.app.services.streak import (
+    calculate_current_streak,
+    calculate_longest_streak,
+)
 
 router = APIRouter(
     prefix="/tasks",
@@ -175,8 +178,10 @@ def get_task_streak(
     ]
 
     current_streak = calculate_current_streak(completion_dates)
+    longest_streak = calculate_longest_streak(completion_dates)
 
     return {
-        "task_id": task_id,
-        "current_streak": current_streak,
-    }
+    "task_id": task_id,
+    "current_streak": current_streak,
+    "longest_streak": longest_streak,
+}

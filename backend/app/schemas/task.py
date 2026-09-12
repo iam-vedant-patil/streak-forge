@@ -36,3 +36,4 @@ class TaskCompletionResponse(BaseModel):
 class TaskStreakResponse(BaseModel):
     task_id: int
     current_streak: int
+    longest_streak: int
