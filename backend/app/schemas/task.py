@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,3 +22,12 @@ class TaskResponse(BaseModel):
     description: str | None
     created_at: datetime
     is_active: bool
+
+
+class TaskCompletionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    task_id: int
+    completion_date: date
+    completed_at: datetime
