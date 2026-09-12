@@ -11,9 +11,10 @@ from backend.app.schemas.task import (
     TaskCompletionResponse,
     TaskCreate,
     TaskResponse,
+    TaskStreakResponse,
     TaskUpdate,
 )
-
+from backend.app.services.streak import calculate_current_streak
 
 router = APIRouter(
     prefix="/tasks",
@@ -145,3 +146,37 @@ def get_task_completions(
         .order_by(TaskCompletion.completion_date.desc())
         .all()
     )
+
+@router.get(
+    "/{task_id}/streak",
+    response_model=TaskStreakResponse,
+)
+def get_task_streak(
+    task_id: int,
+    db: Session = Depends(get_db),
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if task is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found.",
+        )
+
+    completions = (
+        db.query(TaskCompletion)
+        .filter(TaskCompletion.task_id == task_id)
+        .all()
+    )
+
+    completion_dates = [
+        completion.completion_date
+        for completion in completions
+    ]
+
+    current_streak = calculate_current_streak(completion_dates)
+
+    return {
+        "task_id": task_id,
+        "current_streak": current_streak,
+    }

@@ -31,3 +31,8 @@ class TaskCompletionResponse(BaseModel):
     task_id: int
     completion_date: date
     completed_at: datetime
+
+
+class TaskStreakResponse(BaseModel):
+    task_id: int
+    current_streak: int
