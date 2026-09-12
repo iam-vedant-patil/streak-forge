@@ -267,3 +267,180 @@ def test_get_task_completions_task_not_found():
     }
 
     teardown_database()
+def test_create_task():
+    setup_database()
+
+    response = client.post(
+        "/tasks/",
+        json={
+            "title": "New API Task",
+            "description": "Created through the API",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["title"] == "New API Task"
+    assert data["description"] == "Created through the API"
+    assert "id" in data
+    assert data["is_active"] is True
+
+    teardown_database()
+def test_get_tasks():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    tasks = [
+        Task(title="Task One", description="First task"),
+        Task(title="Task Two", description="Second task"),
+    ]
+
+    db.add_all(tasks)
+    db.commit()
+
+    db.close()
+
+    response = client.get("/tasks/")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 2
+    assert data[0]["title"] == "Task One"
+    assert data[1]["title"] == "Task Two"
+
+    teardown_database()
+def test_get_task():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="Single Task",
+        description="Get one task",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.get(f"/tasks/{task_id}")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == task_id
+    assert data["title"] == "Single Task"
+    assert data["description"] == "Get one task"
+
+    teardown_database()
+def test_get_task_not_found():
+    setup_database()
+
+    response = client.get("/tasks/999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
+
+
+def test_update_task():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="Old Title",
+        description="Old description",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={
+            "title": "Updated Title",
+            "description": "Updated description",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["id"] == task_id
+    assert data["title"] == "Updated Title"
+    assert data["description"] == "Updated description"
+
+    teardown_database()
+
+
+def test_update_task_partial():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="Original Title",
+        description="Original description",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={
+            "title": "New Title",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["title"] == "New Title"
+    assert data["description"] == "Original description"
+
+    teardown_database()
+
+
+def test_update_task_not_found():
+    setup_database()
+
+    response = client.patch(
+        "/tasks/999",
+        json={
+            "title": "Updated Title",
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
