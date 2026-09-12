@@ -10,7 +10,7 @@ app = FastAPI(
 @app.get("/")
 def root():
     return {
-        "message": "Streak Forge API is running!",
+        "message": "Streak Forge API is running successfully!",
         "version": "0.1.0",
     }
 
