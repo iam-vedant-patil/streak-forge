@@ -179,3 +179,91 @@ def test_complete_task_not_found():
     }
 
     teardown_database()
+def test_get_task_completions():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="History Test",
+        description="Test completion history",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+    today = date.today()
+
+    completions = [
+        TaskCompletion(
+            task_id=task_id,
+            completion_date=today,
+        ),
+        TaskCompletion(
+            task_id=task_id,
+            completion_date=today - timedelta(days=1),
+        ),
+        TaskCompletion(
+            task_id=task_id,
+            completion_date=today - timedelta(days=3),
+        ),
+    ]
+
+    db.add_all(completions)
+    db.commit()
+    db.close()
+
+    response = client.get(f"/tasks/{task_id}/completions")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert len(data) == 3
+
+    assert data[0]["completion_date"] == today.isoformat()
+    assert data[1]["completion_date"] == (
+        today - timedelta(days=1)
+    ).isoformat()
+    assert data[2]["completion_date"] == (
+        today - timedelta(days=3)
+    ).isoformat()
+
+    teardown_database()
+def test_get_task_completions_empty():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        title="No History",
+        description="Task with no completions",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.get(f"/tasks/{task_id}/completions")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+    teardown_database()
+def test_get_task_completions_task_not_found():
+    setup_database()
+
+    response = client.get("/tasks/999/completions")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
