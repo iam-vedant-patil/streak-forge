@@ -417,6 +417,7 @@ def test_update_task():
 
     response = client.patch(
         f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
         json={
             "title": "Updated Title",
             "description": "Updated description",
@@ -455,6 +456,7 @@ def test_update_task_partial():
 
     response = client.patch(
         f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
         json={
             "title": "New Title",
         },
@@ -475,6 +477,7 @@ def test_update_task_not_found():
 
     response = client.patch(
         "/tasks/999",
+        headers={"X-User-ID": "1"},
         json={
             "title": "Updated Title",
         },
