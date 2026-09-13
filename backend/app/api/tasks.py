@@ -1,3 +1,4 @@
+from backend.app.core.auth import get_current_user
 from backend.app.models.user import User
 from datetime import date
 
@@ -61,9 +62,17 @@ def get_tasks(
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
     task_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = (
+        db.query(Task)
+        .filter(
+            Task.id == task_id,
+            Task.user_id == current_user.id,
+        )
+        .first()
+    )
 
     if task is None:
         raise HTTPException(
@@ -72,7 +81,6 @@ def get_task(
         )
 
     return task
-
 
 @router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(

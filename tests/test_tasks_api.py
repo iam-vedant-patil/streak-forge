@@ -322,7 +322,6 @@ def test_get_tasks():
     db.close()
 
     response = client.get("/tasks/")
-
     assert response.status_code == 200
 
     data = response.json()
@@ -332,6 +331,7 @@ def test_get_tasks():
     assert data[1]["title"] == "Task Two"
 
     teardown_database()
+
 def test_get_task():
     setup_database()
 
@@ -351,7 +351,10 @@ def test_get_task():
 
     db.close()
 
-    response = client.get(f"/tasks/{task_id}")
+    response = client.get(
+        f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 200
 
@@ -362,10 +365,14 @@ def test_get_task():
     assert data["description"] == "Get one task"
 
     teardown_database()
+
 def test_get_task_not_found():
     setup_database()
 
-    response = client.get("/tasks/999")
+    response = client.get(
+        "/tasks/999",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 404
     assert response.json() == {
@@ -457,6 +464,46 @@ def test_update_task_not_found():
         json={
             "title": "Updated Title",
         },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
+
+def test_user_cannot_access_another_users_task():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    second_user = User(
+        username="seconduser",
+        email="second@example.com",
+    )
+
+    db.add(second_user)
+    db.commit()
+    db.refresh(second_user)
+
+    task = Task(
+        user_id=second_user.id,
+        title="Private Task",
+        description="Belongs to user 2",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.get(
+        f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
     )
 
     assert response.status_code == 404
