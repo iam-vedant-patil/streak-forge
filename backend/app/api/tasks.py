@@ -1,3 +1,4 @@
+from backend.app.models.user import User
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -30,7 +31,16 @@ def create_task(
     task: TaskCreate,
     db: Session = Depends(get_db),
 ):
+    user = db.query(User).filter(User.id == task.user_id).first()
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found.",
+        )
+
     db_task = Task(
+        user_id=task.user_id,
         title=task.title,
         description=task.description,
     )
@@ -40,7 +50,6 @@ def create_task(
     db.refresh(db_task)
 
     return db_task
-
 
 @router.get("/", response_model=list[TaskResponse])
 def get_tasks(

@@ -9,6 +9,7 @@ from backend.app.database import Base, get_db
 from backend.app.main import app
 from backend.app.models.task import Task
 from backend.app.models.task_completion import TaskCompletion
+from backend.app.models.user import User
 
 
 # Create a separate in-memory database for API tests.
@@ -39,8 +40,19 @@ client = TestClient(app)
 
 
 def setup_database():
+    Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)
 
+    db = TestingSessionLocal()
+
+    user = User(
+        username="testuser",
+        email="test@example.com",
+    )
+
+    db.add(user)
+    db.commit()
+    db.close()
 
 def teardown_database():
     Base.metadata.drop_all(bind=test_engine)
@@ -52,6 +64,7 @@ def test_get_task_streak():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Test Task",
         description="API test task",
     )
@@ -116,6 +129,7 @@ def test_complete_task():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Complete Me",
         description="Test completion",
     )
@@ -144,6 +158,7 @@ def test_complete_task_twice_same_day():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Complete Twice",
         description="Test duplicate completion",
     )
@@ -185,6 +200,7 @@ def test_get_task_completions():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="History Test",
         description="Test completion history",
     )
@@ -238,6 +254,7 @@ def test_get_task_completions_empty():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="No History",
         description="Task with no completions",
     )
@@ -273,6 +290,7 @@ def test_create_task():
     response = client.post(
         "/tasks/",
         json={
+            "user_id": 1,
             "title": "New API Task",
             "description": "Created through the API",
         },
@@ -294,8 +312,8 @@ def test_get_tasks():
     db = TestingSessionLocal()
 
     tasks = [
-        Task(title="Task One", description="First task"),
-        Task(title="Task Two", description="Second task"),
+        Task(user_id=1, title="Task One", description="First task"),
+        Task(user_id=1, title="Task Two", description="Second task"),
     ]
 
     db.add_all(tasks)
@@ -320,6 +338,7 @@ def test_get_task():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Single Task",
         description="Get one task",
     )
@@ -362,6 +381,7 @@ def test_update_task():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Old Title",
         description="Old description",
     )
@@ -399,6 +419,7 @@ def test_update_task_partial():
     db = TestingSessionLocal()
 
     task = Task(
+        user_id=1,
         title="Original Title",
         description="Original description",
     )
