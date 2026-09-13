@@ -1,7 +1,8 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database import Base
 
@@ -14,6 +15,9 @@ class Task(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         nullable=False,
+    )
+    user: Mapped["User"] = relationship(
+        back_populates="tasks",
     )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -34,3 +38,11 @@ class Task(Base):
         default=True,
         nullable=False,
     )
+    completions: Mapped[list["TaskCompletion"]] = relationship(
+    back_populates="task",
+    )
+if TYPE_CHECKING:
+    from backend.app.models.user import User
+if TYPE_CHECKING:
+    from backend.app.models.task_completion import TaskCompletion
+    from backend.app.models.user import User

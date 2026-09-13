@@ -1,7 +1,8 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.database import Base
 
@@ -17,3 +18,11 @@ class User(Base):
         default=datetime.utcnow,
         nullable=False,
     )
+
+    tasks: Mapped[list["Task"]] = relationship(
+        back_populates="user",
+    )
+
+
+if TYPE_CHECKING:
+    from backend.app.models.task import Task
