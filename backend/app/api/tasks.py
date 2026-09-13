@@ -150,9 +150,17 @@ def complete_task(
 )
 def get_task_completions(
     task_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = (
+        db.query(Task)
+        .filter(
+            Task.id == task_id,
+            Task.user_id == current_user.id,
+        )
+        .first()
+    )
 
     if task is None:
         raise HTTPException(
@@ -174,9 +182,17 @@ def get_task_completions(
 )
 def get_task_streak(
     task_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    task = db.query(Task).filter(Task.id == task_id).first()
+    task = (
+        db.query(Task)
+        .filter(
+            Task.id == task_id,
+            Task.user_id == current_user.id,
+        )
+        .first()
+    )
 
     if task is None:
         raise HTTPException(

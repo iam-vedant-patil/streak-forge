@@ -101,7 +101,10 @@ def test_get_task_streak():
 
     db.close()
 
-    response = client.get(f"/tasks/{task_id}/streak")
+    response = client.get(
+        f"/tasks/{task_id}/streak",
+        headers={"X-User-ID": "1"},
+    )
     assert response.status_code == 200
     assert response.json() == {
         "task_id": task.id,
@@ -115,8 +118,10 @@ def test_get_task_streak():
 def test_get_task_streak_task_not_found():
     setup_database()
 
-    response = client.get("/tasks/999/streak")
-
+    response = client.get(
+        "/tasks/999/streak",
+        headers={"X-User-ID": "1"},
+    )
     assert response.status_code == 404
     assert response.json() == {
         "detail": "Task not found."
@@ -231,7 +236,10 @@ def test_get_task_completions():
     db.commit()
     db.close()
 
-    response = client.get(f"/tasks/{task_id}/completions")
+    response = client.get(
+        f"/tasks/{task_id}/completions",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 200
 
@@ -267,7 +275,10 @@ def test_get_task_completions_empty():
 
     db.close()
 
-    response = client.get(f"/tasks/{task_id}/completions")
+    response = client.get(
+        f"/tasks/{task_id}/completions",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 200
     assert response.json() == []
@@ -276,7 +287,10 @@ def test_get_task_completions_empty():
 def test_get_task_completions_task_not_found():
     setup_database()
 
-    response = client.get("/tasks/999/completions")
+    response = client.get(
+        "/tasks/999/completions",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 404
     assert response.json() == {
@@ -503,6 +517,85 @@ def test_user_cannot_access_another_users_task():
 
     response = client.get(
         f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
+
+def test_user_cannot_access_another_users_task_completions():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    second_user = User(
+        username="seconduser",
+        email="second@example.com",
+    )
+
+    db.add(second_user)
+    db.commit()
+    db.refresh(second_user)
+
+    task = Task(
+        user_id=second_user.id,
+        title="Private Task",
+        description="Belongs to user 2",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.get(
+        f"/tasks/{task_id}/completions",
+        headers={"X-User-ID": "1"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
+
+    teardown_database()
+def test_user_cannot_access_another_users_task_streak():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    second_user = User(
+        username="seconduser",
+        email="second@example.com",
+    )
+
+    db.add(second_user)
+    db.commit()
+    db.refresh(second_user)
+
+    task = Task(
+        user_id=second_user.id,
+        title="Private Task",
+        description="Belongs to user 2",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.get(
+        f"/tasks/{task_id}/streak",
         headers={"X-User-ID": "1"},
     )
 
