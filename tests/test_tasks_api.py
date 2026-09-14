@@ -339,29 +339,33 @@ def test_create_task_assigns_category():
     assert data["category"] == "Programming"
 
     teardown_database()
-def test_get_tasks():
+
+def test_get_tasks_returns_only_current_users_tasks():
     setup_database()
 
     db = TestingSessionLocal()
 
     tasks = [
-        Task(user_id=1, title="Task One", description="First task"),
-        Task(user_id=1, title="Task Two", description="Second task"),
+        Task(user_id=1, title="User One Task", description="First task"),
+        Task(user_id=2, title="User Two Task", description="Second task"),
     ]
 
     db.add_all(tasks)
     db.commit()
-
     db.close()
 
-    response = client.get("/tasks/")
+    response = client.get(
+        "/tasks/",
+        headers={"X-User-ID": "1"},
+    )
+
     assert response.status_code == 200
 
     data = response.json()
 
-    assert len(data) == 2
-    assert data[0]["title"] == "Task One"
-    assert data[1]["title"] == "Task Two"
+    assert len(data) == 1
+    assert data[0]["title"] == "User One Task"
+    assert data[0]["user_id"] == 1
 
     teardown_database()
 
