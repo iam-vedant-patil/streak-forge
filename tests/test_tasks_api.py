@@ -147,7 +147,10 @@ def test_complete_task():
 
     db.close()
 
-    response = client.post(f"/tasks/{task_id}/complete")
+    response = client.post(
+        f"/tasks/{task_id}/complete",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 200
 
@@ -155,6 +158,36 @@ def test_complete_task():
 
     assert data["task_id"] == task_id
     assert data["completion_date"] == date.today().isoformat()
+
+    teardown_database()
+def test_complete_task_rejects_other_users_task():
+    setup_database()
+
+    db = TestingSessionLocal()
+
+    task = Task(
+        user_id=2,
+        title="User Two Task",
+        description="Should not be completable by user one",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.post(
+        f"/tasks/{task_id}/complete",
+        headers={"X-User-ID": "1"},
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Task not found."
+    }
 
     teardown_database()
 def test_complete_task_twice_same_day():
@@ -176,11 +209,17 @@ def test_complete_task_twice_same_day():
 
     db.close()
 
-    first_response = client.post(f"/tasks/{task_id}/complete")
+    first_response = client.post(
+        f"/tasks/{task_id}/complete",
+        headers={"X-User-ID": "1"},
+    )
 
     assert first_response.status_code == 200
 
-    second_response = client.post(f"/tasks/{task_id}/complete")
+    second_response = client.post(
+        f"/tasks/{task_id}/complete",
+        headers={"X-User-ID": "1"},
+    )
 
     assert second_response.status_code == 409
     assert second_response.json() == {
@@ -191,7 +230,10 @@ def test_complete_task_twice_same_day():
 def test_complete_task_not_found():
     setup_database()
 
-    response = client.post("/tasks/999/complete")
+    response = client.post(
+        "/tasks/999/complete",
+        headers={"X-User-ID": "1"},
+    )
 
     assert response.status_code == 404
     assert response.json() == {
