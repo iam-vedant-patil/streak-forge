@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -47,5 +48,36 @@ def test_get_current_user_returns_user():
 
     assert user.id == 1
     assert user.username == "testuser"
+
+    db.close()
+
+def test_get_current_user_requires_user_id():
+    db = setup_database()
+
+    try:
+        get_current_user(
+            x_user_id=None,
+            db=db,
+        )
+        assert False, "Expected HTTPException"
+    except HTTPException as exc:
+        assert exc.status_code == 401
+        assert exc.detail == "Authentication required."
+
+    db.close()
+
+
+def test_get_current_user_rejects_invalid_user_id():
+    db = setup_database()
+
+    try:
+        get_current_user(
+            x_user_id=999,
+            db=db,
+        )
+        assert False, "Expected HTTPException"
+    except HTTPException as exc:
+        assert exc.status_code == 401
+        assert exc.detail == "Invalid user."
 
     db.close()
