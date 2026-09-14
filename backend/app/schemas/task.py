@@ -4,7 +4,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class TaskCreate(BaseModel):
-    user_id: int
     title: str
     description: str | None = None
 

@@ -345,8 +345,8 @@ def test_create_task():
 
     response = client.post(
         "/tasks/",
+        headers={"X-User-ID": "1"},
         json={
-            "user_id": 1,
             "title": "New API Task",
             "description": "Created through the API",
         },
@@ -367,10 +367,10 @@ def test_create_task_assigns_category():
 
     response = client.post(
         "/tasks/",
+        headers={"X-User-ID": "1"},
         json={
-            "user_id": 1,
-            "title": "Build Python API",
-            "description": "Work on the FastAPI backend",
+            "title": "New API Task",
+            "description": "Created through the API",
         },
     )
 
@@ -379,6 +379,26 @@ def test_create_task_assigns_category():
     data = response.json()
 
     assert data["category"] == "Programming"
+
+    teardown_database()
+def test_create_task_uses_authenticated_user():
+    setup_database()
+
+    response = client.post(
+        "/tasks/",
+        headers={"X-User-ID": "1"},
+        json={
+            "title": "Authenticated Task",
+            "description": "Owner should come from authentication",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["user_id"] == 1
+    assert data["title"] == "Authenticated Task"
 
     teardown_database()
 

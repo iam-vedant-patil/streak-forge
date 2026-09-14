@@ -31,15 +31,9 @@ router = APIRouter(
 @router.post("/", response_model=TaskResponse)
 def create_task(
     task: TaskCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.id == task.user_id).first()
-
-    if user is None:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found.",
-        )
 
     category = classify_task(
         task.title,
@@ -47,7 +41,7 @@ def create_task(
     )
 
     db_task = Task(
-        user_id=task.user_id,
+        user_id=current_user.id,
         title=task.title,
         description=task.description,
         category=category,
