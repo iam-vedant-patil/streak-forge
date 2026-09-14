@@ -1,3 +1,4 @@
+from backend.app.services.category import classify_task
 from backend.app.core.auth import get_current_user
 from backend.app.models.user import User
 from datetime import date
@@ -40,10 +41,16 @@ def create_task(
             detail="User not found.",
         )
 
+    category = classify_task(
+        task.title,
+        task.description,
+    )
+
     db_task = Task(
         user_id=task.user_id,
         title=task.title,
         description=task.description,
+        category=category,
     )
 
     db.add(db_task)

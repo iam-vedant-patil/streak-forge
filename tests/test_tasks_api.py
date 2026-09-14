@@ -320,6 +320,25 @@ def test_create_task():
     assert data["is_active"] is True
 
     teardown_database()
+def test_create_task_assigns_category():
+    setup_database()
+
+    response = client.post(
+        "/tasks/",
+        json={
+            "user_id": 1,
+            "title": "Build Python API",
+            "description": "Work on the FastAPI backend",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["category"] == "Programming"
+
+    teardown_database()
 def test_get_tasks():
     setup_database()
 

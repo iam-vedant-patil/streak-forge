@@ -22,6 +22,7 @@ class TaskResponse(BaseModel):
     user_id: int
     title: str
     description: str | None
+    category: str | None
     created_at: datetime
     is_active: bool
 
