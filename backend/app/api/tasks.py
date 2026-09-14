@@ -1,8 +1,26 @@
-from backend.app.services.category import classify_task
-from backend.app.core.auth import get_current_user
-from backend.app.models.user import User
 from datetime import date
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from backend.app.core.auth import get_current_user
+from backend.app.database import get_db
+from backend.app.models.task import Task
+from backend.app.models.task_completion import TaskCompletion
+from backend.app.models.user import User
+from backend.app.schemas.task import (
+    TaskCompletionResponse,
+    TaskCreate,
+    TaskResponse,
+    TaskStreakResponse,
+    TaskUpdate,
+)
+from backend.app.services.category import classify_task
+from backend.app.services.streak import (
+    calculate_current_streak,
+    calculate_longest_streak,
+)
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -110,9 +128,20 @@ def update_task(
 
     update_data = task_update.model_dump(exclude_unset=True)
 
+    if "title" in update_data or "description" in update_data:
+        new_title = update_data.get("title", task.title)
+        new_description = update_data.get(
+            "description",
+            task.description,
+        )
+
+        task.category = classify_task(
+            new_title,
+            new_description,
+        )
+
     for field, value in update_data.items():
         setattr(task, field, value)
-
     db.commit()
     db.refresh(task)
 

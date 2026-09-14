@@ -519,7 +519,44 @@ def test_update_task():
 
     teardown_database()
 
+def test_update_task_recalculates_category():
+    setup_database()
 
+    db = TestingSessionLocal()
+
+    task = Task(
+        user_id=1,
+        title="Read a book",
+        description="Study for the exam",
+        category="Learning",
+    )
+
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    task_id = task.id
+
+    db.close()
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        headers={"X-User-ID": "1"},
+        json={
+            "title": "Build a Python API",
+            "description": "Work with FastAPI and GitHub",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["title"] == "Build a Python API"
+    assert data["description"] == "Work with FastAPI and GitHub"
+    assert data["category"] == "Programming"
+
+    teardown_database()
 def test_update_task_partial():
     setup_database()
 
